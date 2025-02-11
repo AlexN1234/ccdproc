@@ -15,7 +15,6 @@ from numpy.testing import assert_array_equal
 
 from ccdproc.core import (
     Keyword,
-    _blkavg,
     ccd_process,
     cosmicray_lacosmic,
     cosmicray_median,
@@ -305,6 +304,9 @@ def test_subtract_overscan_fails():
     # Does a fits_section which is not a string raise an error?
     with pytest.raises(TypeError):
         subtract_overscan(ccd_data, fits_section=5)
+    # Do we raise an error if the input is a plain array?
+    with pytest.raises(TypeError):
+        subtract_overscan(np.zeros((10, 10)), fits_section="[1:10]")
 
 
 def test_trim_image_fits_section_requires_string():
@@ -805,29 +807,6 @@ def test_block_replicate():
     # Make sure meta is copied
     ccd_repl.meta["testkw2"] = 10
     assert "testkw2" not in ccd.meta
-
-
-# Test blockaveraging ndarray
-def test__blkavg_ndarray():
-    with pytest.raises(TypeError):
-        _blkavg(1, (5, 5))
-
-
-# Test rebinning dimensions
-def test__blkavg_dimensions():
-    ccd_data = ccd_data_func(data_size=10)
-    with pytest.raises(ValueError):
-        _blkavg(ccd_data.data, (5,))
-
-
-# Test blkavg works
-def test__blkavg_larger():
-    ccd_data = ccd_data_func(data_size=20)
-    a = ccd_data.data
-    b = _blkavg(a, (10, 10))
-
-    assert b.shape == (10, 10)
-    np.testing.assert_almost_equal(b.sum(), 0.25 * a.sum())
 
 
 # Test overscan changes
